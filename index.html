@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prem Manager 26</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #1a1a2e; color: white; }
+.screen { display: none; padding: 15px; max-width: 1000px; margin: 0 auto; }
+.active { display: block; }
+        #menu { text-align: center; padding-top: 80px; }
+        h1 { font-size: 2.5rem; color: #00d4ff; margin-bottom: 10px; }
+.btn { background: #00d4ff; color: #1a1a2e; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 5px; }
+.btn:hover { background: #00b8e6; }
+.btn-small { padding: 8px 15px; font-size: 0.9rem; }
+.btn-red { background: #e94560; color: white; }
+.teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 15px; }
+.team-btn { background: #16213e; border: 2px solid #0f3460; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; }
+.team-btn:active { background: #0f3460; }
+.dash-header { background: #16213e; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+.stat-box { background: #0f3460; padding: 12px; border-radius: 8px; text-align: center; }
+.nav-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.squad-container { display: grid; grid-template-columns: 280px 1fr; gap: 15px; }
+.player-list,.pitch-container { background: #16213e; padding: 15px; border-radius: 8px; max-height: 70vh; overflow-y: auto; }
+.player { background: #0f3460; margin: 5px 0; padding: 8px; border-radius: 6px; display: flex; justify-content: space-between; cursor: pointer; font-size: 0.9rem; }
+.player:hover { background: #1a2b4a; }
+.player.selected { border: 2px solid #00d4ff; }
+.pos-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 5px; }
+.pos-GK { background: #f9a825; }.pos-DEF { background: #43a047; }
+.pos-MID { background: #1e88e5; }.pos-FWD { background: #e53935; }
+.pitch { background: #2d5016; border: 3px solid white; border-radius: 8px; height: 400px; position: relative; margin-bottom: 10px; }
+.center-circle { width: 80px; height: 80px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.pitch-player { position: absolute; background: #00d4ff; color: #1a1a2e; padding: 4px 8px; border-radius: 15px; font-size: 0.7rem; font-weight: bold; transform: translate(-50%,-50%); text-align: center; min-width: 60px; cursor: pointer; }
+.subs-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+.sub-player { background: #0f3460; padding: 5px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; justify-content: center; align-items: center; pointer-events: none; }
+.modal.active { display: flex; pointer-events: all; }
+.modal-content { background: #16213e; padding: 25px; border-radius: 12px; text-align: center; width: 90%; max-width: 400px; }
+.modal input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: none; background: #0f3460; color: white; font-size: 1rem; text-align: center; }
+select { background: #0f3460; color: white; border: none; padding: 8px; border-radius: 6px; margin-bottom: 10px; }
+@media (max-width: 800px) {
+   .squad-container { grid-template-columns: 1fr; }
+   .pitch { height: 350px; }
+}
+    </style>
+</head>
+<body>
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTeamName">Welcome Manager!</h2>
+            <p>Enter your name:</p>
+            <input type="text" id="managerNameInput" placeholder="Your Name" maxlength="20">
+            <button class="btn" onclick="confirmName()">Confirm</button>
+        </div>
+    </div>
+
+    <div id="menu" class="screen active">
+        <h1>PREM MANAGER 26</h1>
+        <p style="color:#aaa; margin-bottom:30px;">2025-26 Season | Updated April 2026</p>
+        <button class="btn" onclick="showScreen('teamSelect')">START GAME</button>
+    </div>
+
+    <div id="teamSelect" class="screen">
+        <h2>Select Your Team</h2>
+        <div class="teams-grid" id="teamsGrid"></div>
+        <button class="btn btn-red btn-small" onclick="showScreen('menu')">Back</button>
+    </div>
+
+    <div id="dashboard" class="screen">
+        <div class="dash-header">
+            <div>
+                <h2 id="managerTeam">Team</h2>
+                <p>Manager: <span id="managerNameText">You</span></p>
+            </div>
+            <div style="text-align:right;">
+                <p>Week: 1</p>
+                <p id="formationText">Formation: 4-3-3</p>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-box"><h3>Points</h3><p style="font-size:1.8rem;">0</p></div>
+            <div class="stat-box"><h3>Position</h3><p style="font-size:1.8rem;">-</p></div>
+            <div class="stat-box"><h3>Budget</h3><p style="font-size:1.8rem;">£50m</p></div>
+        </div>
+        <div class="nav-btns">
+            <button class="btn" onclick="showScreen('squad')">Squad / Lineup</button>
+            <button class="btn" onclick="alert('Match engine next!')">Play Match</button>
+            <button class="btn btn-red btn-small" onclick="showScreen('teamSelect')">Change Team</button>
+        </div>
+    </div>
+
+    <div id="squad" class="screen">
+        <h2>Squad Management</h2>
+        <select id="formationSelect" onchange="updateFormation()">
+            <option value="4-3-3">4-3-3</option>
+            <option value="4-4-2">4-4-2</option>
+            <option value="3-5-2">3-5-2</option>
+            <option value="4-2-3-1">4-2-3-1</option>
+        </select>
+        <div class="squad-container">
+            <div class="player-list">
+                <h3>Full Squad</h3>
+                <div id="fullSquad"></div>
+            </div>
+            <div class="pitch-container">
+                <h3>Starting XI <span id="xiCount">(0/11)</span></h3>
+                <div class="pitch" id="pitch">
+                    <div class="center-circle"></div>
+                </div>
+                <h4>Subs Bench</h4>
+                <div class="subs-row" id="subsBench"></div>
+            </div>
+        <button class="btn btn-small" onclick="showScreen('dashboard')" style="margin-top:15px;">Back to Dashboard</button>
+    </div>
+
+    <script>
+        const teams = ["Arsenal","Aston Villa","Bournemouth","Brentford","Brighton","Burnley","Chelsea","Crystal Palace","Everton","Fulham","Leeds United","Liverpool","Manchester City","Manchester United","Newcastle United","Nottingham Forest","Sunderland","Tottenham Hotspur","West Ham United","Wolves"];
+
+        const squads = {
+            "Manchester United": [
+                {name:"Lammens", pos:"GK", rating:80}, {name:"Bayindir", pos:"GK", rating:75}, {name:"Heaton", pos:"GK", rating:70},
+                {name:"Dalot", pos:"DEF", rating:80}, {name:"Yoro", pos:"DEF", rating:79}, {name:"De Ligt", pos:"DEF", rating:83},
+                {name:"Martinez", pos:"DEF", rating:83}, {name:"Shaw", pos:"DEF", rating:81}, {name:"Mazraoui", pos:"DEF", rating:79},
+                {name:"Maguire", pos:"DEF", rating:78}, {name:"Brantwaite", pos:"DEF", rating:81}, {name:"Malacia", pos:"DEF", rating:75},
+                {name:"Ugarte", pos:"MID", rating:82}, {name:"Fernandes", pos:"MID", rating:87}, {name:"Mainoo", pos:"MID", rating:81},
+                {name:"Mount", pos:"MID", rating:80}, {name:"Casemiro", pos:"MID", rating:81}, {name:"Kone", pos:"MID", rating:76},
+                {name:"Collyer", pos:"MID", rating:74}, {name:"Hojlund", pos:"FWD", rating:81}, {name:"Zirkzee", pos:"FWD", rating:79},
+                {name:"Rashford", pos:"FWD", rating:83}, {name:"Amad", pos:"FWD", rating:80}, {name:"Antony", pos:"FWD", rating:78},
+                {name:"Sesko", pos:"FWD", rating:82}
+            ],
+            "Arsenal": [
+                {name:"Raya", pos:"GK", rating:84}, {name:"Neto", pos:"GK", rating:77},
+                {name:"White", pos:"DEF", rating:83}, {name:"Saliba", pos:"DEF", rating:87}, {name:"Gabriel", pos:"DEF", rating:84},
+                {name:"Timber", pos:"DEF", rating:82}, {name:"Calafiori", pos:"DEF", rating:81}, {name:"Kiwior", pos:"DEF", rating:78},
+                {name:"Tomiyasu", pos:"DEF", rating:79}, {name:"Lewis-Skelly", pos:"DEF", rating:74}, {name:"Rice", pos:"MID", rating:87},
+                {name:"Odegaard", pos:"MID", rating:88}, {name:"Merino", pos:"MID", rating:82}, {name:"Partey", pos:"MID", rating:81},
+                {name:"Jorginho", pos:"MID", rating:80}, {name:"Nwaneri", pos:"MID", rating:75}, {name:"Saka", pos:"FWD", rating:89},
+                {name:"Havertz", pos:"FWD", rating:83}, {name:"Martinelli", pos:"FWD", rating:83}, {name:"Jesus", pos:"FWD", rating:82},
+                {name:"Trossard", pos:"FWD", rating:82}, {name:"Sterling", pos:"FWD", rating:80}
+            ],
+            "Manchester City": [
+                {name:"Ederson", pos:"GK", rating:86}, {name:"Ortega", pos:"GK", rating:79},
+                {name:"Walker", pos:"DEF", rating:81}, {name:"Dias", pos:"DEF", rating:88}, {name:"Stones", pos:"DEF", rating:83},
+                {name:"Ake", pos:"DEF", rating:82}, {name:"Gvardiol", pos:"DEF", rating:85}, {name:"Akanji", pos:"DEF", rating:82},
+                {name:"Lewis", pos:"DEF", rating:76}, {name:"Rodri", pos:"MID", rating:91}, {name:"De Bruyne", pos:"MID", rating:87},
+                {name:"Silva", pos:"MID", rating:86}, {name:"Foden", pos:"MID", rating:87}, {name:"Kovacic", pos:"MID", rating:82},
+                {name:"Nunes", pos:"MID", rating:79}, {name:"Haaland", pos:"FWD", rating:91}, {name:"Alvarez", pos:"FWD", rating:84},
+                {name:"Doku", pos:"FWD", rating:82}, {name:"Grealish", pos:"FWD", rating:81}, {name:"Savinho", pos:"FWD", rating:80}
+            ],
+            "Liverpool": [
+                {name:"Alisson", pos:"GK", rating:89}, {name:"Mamardashvili", pos:"GK", rating:82}, {name:"Kelleher", pos:"GK", rating:78},
+                {name:"Alexander-Arnold", pos:"DEF", rating:86}, {name:"Van Dijk", pos:"DEF", rating:86}, {name:"Konate", pos:"DEF", rating:83},
+                {name:"Robertson", pos:"DEF", rating:83}, {name:"Gomez", pos:"DEF", rating:79}, {name:"Bradley", pos:"DEF", rating:77},
+                {name:"Quansah", pos:"DEF", rating:76}, {name:"Mac Allister", pos:"MID", rating:86}, {name:"Szoboszlai", pos:"MID", rating:84},
+                {name:"Gravenberch", pos:"MID", rating:82}, {name:"Jones", pos:"MID", rating:80}, {name:"Endo", pos:"MID", rating:78},
+                {name:"Elliott", pos:"MID", rating:79}, {name:"Salah", pos:"FWD", rating:89}, {name:"Nunez", pos:"FWD", rating:82},
+                {name:"Diaz", pos:"FWD", rating:84}, {name:"Jota", pos:"FWD", rating:83}, {name:"Gakpo", pos:"FWD", rating:82}
+            ],
+            "Chelsea": [
+                {name:"Sanchez", pos:"GK", rating:79}, {name:"Jorgensen", pos:"GK", rating:76},
+                {name:"James", pos:"DEF", rating:83}, {name:"Fofana", pos:"DEF", rating:81}, {name:"Colwill", pos:"DEF", rating:81},
+                {name:"Disasi", pos:"DEF", rating:79}, {name:"Cucurella", pos:"DEF", rating:80}, {name:"Gusto", pos:"DEF", rating:79},
+                {name:"Badiashile", pos:"DEF", rating:78}, {name:"Caicedo", pos:"MID", rating:84}, {name:"Fernandez", pos:"MID", rating:84},
+                {name:"Palmer", pos:"MID", rating:87}, {name:"Lavia", pos:"MID", rating:80}, {name:"Dewsbury-Hall", pos:"MID", rating:78},
+                {name:"Garnacho", pos:"FWD", rating:82}, {name:"Jackson", pos:"FWD", rating:81}, {name:"Nkunku", pos:"FWD", rating:83},
+                {name:"Madueke", pos:"FWD", rating:80}, {name:"Mudryk", pos:"FWD", rating:78}, {name:"Neto", pos:"FWD", rating:82}
+            ],
+            "Tottenham Hotspur": [
+                {name:"Vicario", pos:"GK", rating:82}, {name:"Austin", pos:"GK", rating:72},
+                {name:"Porro", pos:"DEF", rating:82}, {name:"Romero", pos:"DEF", rating:85}, {name:"Van de Ven", pos:"DEF", rating:84},
+                {name:"Udogie", pos:"DEF", rating:81}, {name:"Dragusin", pos:"DEF", rating:79}, {name:"Davies", pos:"DEF", rating:77},
+                {name:"Spence", pos:"DEF", rating:76}, {name:"Bissouma", pos:"MID", rating:81}, {name:"Maddison", pos:"MID", rating:84},
+                {name:"Bentancur", pos:"MID", rating:82}, {name:"Sarr", pos:"MID", rating:79}, {name:"Kulusevski", pos:"MID", rating:83},
+                {name:"Bergvall", pos:"MID", rating:75}, {name:"Son", pos:"FWD", rating:86}, {name:"Solanke", pos:"FWD", rating:81},
+                {name:"Johnson", pos:"FWD", rating:80}, {name:"Richarlison", pos:"FWD", rating:80}, {name:"Tel", pos:"FWD", rating:76}
+            ],
+            "Newcastle United": [
+                {name:"Pope", pos:"GK", rating:81}, {name:"Dubravka", pos:"GK", rating:76},
+                {name:"Trippier", pos:"DEF", rating:82}, {name:"Schar", pos:"DEF", rating:81}, {name:"Botman", pos:"DEF", rating:82},
+                {name:"Burn", pos:"DEF", rating:78}, {name:"Livramento", pos:"DEF", rating:79}, {name:"Hall", pos:"DEF", rating:77},
+                {name:"Kelly", pos:"DEF", rating:76}, {name:"Guimaraes", pos:"MID", rating:85}, {name:"Tonali", pos:"MID", rating:83},
+                {name:"Joelinton", pos:"MID", rating:82}, {name:"Willock", pos:"MID", rating:78}, {name:"Longstaff", pos:"MID", rating:77},
+                {name:"Isak", pos:"FWD", rating:86}, {name:"Gordon", pos:"FWD", rating:82}, {name:"Barnes", pos:"FWD", rating:80},
+                {name:"Murphy", pos:"FWD", rating:76}, {name:"Wilson", pos:"FWD", rating:79}
+            ],
+            "Aston Villa": [
+                {name:"Martinez", pos:"GK", rating:85}, {name:"Olsen", pos:"GK", rating:74},
+                {name:"Cash", pos:"DEF", rating:79}, {name:"Konsa", pos:"DEF", rating:82}, {name:"Torres", pos:"DEF", rating:82},
+                {name:"Digne", pos:"DEF", rating:79}, {name:"Carlos", pos:"DEF", rating:78}, {name:"Moreno", pos:"DEF", rating:76},
+                {name:"Mings", pos:"DEF", rating:78}, {name:"Onana", pos:"MID", rating:81}, {name:"Kamara", pos:"MID", rating:80},
+                {name:"Tielemans", pos:"MID", rating:81}, {name:"McGinn", pos:"MID", rating:80}, {name:"Ramsey", pos:"MID", rating:78},
+                {name:"Watkins", pos:"FWD", rating:84}, {name:"Duran", pos:"FWD", rating:79}, {name:"Bailey", pos:"FWD", rating:81},
+                {name:"Diaby", pos:"FWD", rating:82}, {name:"Rogers", pos:"FWD", rating:77}
+            ],
+            "West Ham United": [
+                {name:"Areola", pos:"GK", rating:79}, {name:"Fabianski", pos:"GK", rating:75},
+                {name:"Coufal", pos:"DEF", rating:77}, {name:"Mavropanos", pos:"DEF", rating:78}, {name:"Kilman", pos:"DEF", rating:79},
+                {name:"Todibo", pos:"DEF", rating:80}, {name:"Emerson", pos:"DEF", rating:78}, {name:"Cresswell", pos:"DEF", rating:74},
+                {name:"Wan-Bissaka", pos:"DEF", rating:79}, {name:"Paqueta", pos:"MID", rating:83}, {name:"Soucek", pos:"MID", rating:79},
+                {name:"Alvarez", pos:"MID", rating:80}, {name:"Ward-Prowse", pos:"MID", rating:79}, {name:"Rodriguez", pos:"MID", rating:77},
+                {name:"Bowen", pos:"FWD", rating:84}, {name:"Kudus", pos:"FWD", rating:82}, {name:"Fullkrug", pos:"FWD", rating:80},
+                {name:"Antonio", pos:"FWD", rating:76}, {name:"Summerville", pos:"FWD", rating:78}
+            ],
+            "Brighton": [
+                {name:"Verbruggen", pos:"GK", rating:79}, {name:"Steele", pos:"GK", rating:74},
+                {name:"Veltman", pos:"DEF", rating:78}, {name:"Dunk", pos:"DEF", rating:80}, {name:"Van Hecke", pos:"DEF", rating:79},
+                {name:"Estupinan", pos:"DEF", rating:80}, {name:"Webster", pos:"DEF", rating:76}, {name:"Lamptey", pos:"DEF", rating:77},
+                {name:"Igor", pos:"DEF", rating:76}, {name:"Baleba", pos:"MID", rating:79}, {name:"Gilmour", pos:"MID", rating:78},
+                {name:"Gross", pos:"MID", rating:79}, {name:"Milner", pos:"MID", rating:76}, {name:"Wieffer", pos:"MID", rating:77},
+                {name:"Mitoma", pos:"FWD", rating:83}, {name:"Pedro", pos:"FWD", rating:82}, {name:"Welbeck", pos:"FWD", rating:78},
+                {name:"Enciso", pos:"FWD", rating:77}, {name:"Adingra", pos:"FWD", rating:78}, {name:"Ferguson", pos:"FWD", rating:79}
+            ],
+            "Brentford": [
+                {name:"Flekken", pos:"GK", rating:78}, {name:"Valdimarsson", pos:"GK", rating:73},
+                {name:"Ajer", pos:"DEF", rating:78}, {name:"Collins", pos:"DEF", rating:79}, {name:"Pinnock", pos:"DEF", rating:77},
+                {name:"Hickey", pos:"DEF", rating:77}, {name:"Henry", pos:"DEF", rating:76}, {name:"Roerslev", pos:"DEF", rating:75},
+                {name:"Norgaard", pos:"MID", rating:79}, {name:"Janelt", pos:"MID", rating:77}, {name:"Damsgaard", pos:"MID", rating:78},
+                {name:"Jensen", pos:"MID", rating:78}, {name:"Yarmolyuk", pos:"MID", rating:75}, {name:"Mbeumo", pos:"FWD", rating:82},
+                {name:"Wissa", pos:"FWD", rating:80}, {name:"Schade", pos:"FWD", rating:77}, {name:"Toney", pos:"FWD", rating:81},
+                {name:"Lewis-Potter", pos:"FWD", rating:76}
+            ],
+            "Fulham": [
+                {name:"Leno", pos:"GK", rating:80}, {name:"Benda", pos:"GK", rating:72},
+                {name:"Castagne", pos:"DEF", rating:78}, {name:"Diop", pos:"DEF", rating:77}, {name:"Andersen", pos:"DEF", rating:79},
+                {name:"Bassey", pos:"DEF", rating:78}, {name:"Robinson", pos:"DEF", rating:79}, {name:"Tete", pos:"DEF", rating:76},
+                {name:"Lukic", pos:"MID", rating:78}, {name:"Pereira", pos:"MID", rating:80}, {name:"Smith Rowe", pos:"MID", rating:79},
+                {name:"Reed", pos:"MID", rating:76}, {name:"Berge", pos:"MID", rating:78}, {name:"Jimenez", pos:"FWD", rating:78},
+                {name:"Iwobi", pos:"FWD", rating:79}, {name:"Traore", pos:"FWD", rating:77}, {name:"Wilson", pos:"FWD", rating:77},
+                {name:"Muniz", pos:"FWD", rating:76}
+            ],
+            "Bournemouth": [
+                {name:"Travers", pos:"GK", rating:76}, {name:"Kepa", pos:"GK", rating:78},
+                {name:"Smith", pos:"DEF", rating:76}, {name:"Zabarnyi", pos:"DEF", rating:79}, {name:"Senesi", pos:"DEF", rating:78},
+                {name:"Kerkez", pos:"DEF", rating:79}, {name:"Huijsen", pos:"DEF", rating:77}, {name:"Araujo", pos:"DEF", rating:76},
+                {name:"Christie", pos:"MID", rating:77}, {name:"Cook", pos:"MID", rating:76}, {name:"Scott", pos:"MID", rating:78},
+                {name:"Tavernier", pos:"MID", rating:78}, {name:"Kluivert", pos:"MID", rating:79}, {name:"Solanke", pos:"FWD", rating:81},
+                {name:"Semenyo", pos:"FWD", rating:79}, {name:"Ouattara", pos:"FWD", rating:77}, {name:"Sinisterra", pos:"FWD", rating:77},
+                {name:"Unal", pos:"FWD", rating:76}
+            ],
+            "Crystal Palace": [
+                {name:"Henderson", pos:"GK", rating:79}, {name:"Johnstone", pos:"GK", rating:76},
+                {name:"Munoz", pos:"DEF", rating:79}, {name:"Guehi", pos:"DEF", rating:82}, {name:"Andersen", pos:"DEF", rating:78},
+                {name:"Mitchell", pos:"DEF", rating:78}, {name:"Richards", pos:"DEF", rating:76}, {name:"Riad", pos:"DEF", rating:75},
+                {name:"Lacroix", pos:"DEF", rating:77}, {name:"Wharton", pos:"MID", rating:79}, {name:"Hughes", pos:"MID", rating:77},
+                {name:"Doucoure", pos:"MID", rating:78}, {name:"Eze", pos:"MID", rating:83}, {name:"Lerma", pos:"MID", rating:78},
+                {name:"Mateta", pos:"FWD", rating:81}, {name:"Nketiah", pos:"FWD", rating:78}, {name:"Sarr", pos:"FWD", rating:79},
+                {name:"Edouard", pos:"FWD", rating:76}, {name:"Ayew", pos:"FWD", rating:75}
+            ],
+            "Everton": [
+                {name:"Pickford", pos:"GK", rating:83}, {name:"Virginia", pos:"GK", rating:72},
+                {name:"Coleman", pos:"DEF", rating:76}, {name:"Tarkowski", pos:"DEF", rating:79}, {name:"Branthwaite", pos:"DEF", rating:80},
+                {name:"Mykolenko", pos:"DEF", rating:78}, {name:"Patterson", pos:"DEF", rating:75}, {name:"Keane", pos:"DEF", rating:75},
+                {name:"Young", pos:"DEF", rating:74}, {name:"Gueye", pos:"MID", rating:78}, {name:"Garner", pos:"MID", rating:77},
+                {name:"Doucoure", pos:"MID", rating:78}, {name:"Iroegbunam", pos:"MID", rating:74}, {name:"McNeil", pos:"MID", rating:78},
+                {name:"Calvert-Lewin", pos:"FWD", rating:79}, {name:"Beto", pos:"FWD", rating:77}, {name:"Harrison", pos:"FWD", rating:77},
+                {name:"Ndiaye", pos:"FWD", rating:78}, {name:"Broja", pos:"FWD", rating:76}
+            ],
+            "Nottingham Forest": [
+                {name:"Sels", pos:"GK", rating:78}, {name:"Turner", pos:"GK", rating:74},
+                {name:"Williams", pos:"DEF", rating:77}, {name:"Murillo", pos:"DEF", rating:80}, {name:"Milenkovic", pos:"DEF", rating:79},
+                {name:"Aina", pos:"DEF", rating:78}, {name:"Boly", pos:"DEF", rating:76}, {name:"Toffolo", pos:"DEF", rating:74},
+                {name:"Dominguez", pos:"MID", rating:79}, {name:"Sangare", pos:"MID", rating:79}, {name:"Anderson", pos:"MID", rating:78},
+                {name:"Gibbs-White", pos:"MID", rating:82}, {name:"Yates", pos:"MID", rating:76}, {name:"Wood", pos:"FWD", rating:79},
+                {name:"Elanga", pos:"FWD", rating:80}, {name:"Hudson-Odoi", pos:"FWD", rating:79}, {name:"Awoniyi", pos:"FWD", rating:78},
+                {name:"Jota", pos:"FWD", rating:77}
+            ],
+            "Wolves": [
+                {name:"Sa", pos:"GK", rating:78}, {name:"Bentley", pos:"GK", rating:72},
+                {name:"Semedo", pos:"DEF", rating:78}, {name:"Dawson", pos:"DEF", rating:76}, {name:"Kilman", pos:"DEF", rating:79},
+                {name:"Toti", pos:"DEF", rating:77}, {name:"Ait-Nouri", pos:"DEF", rating:79}, {name:"Bueno", pos:"DEF", rating:75},
+                {name:"Doyle", pos:"MID", rating:76}, {name:"Lemina", pos:"MID", rating:78}, {name:"Gomes", pos:"MID", rating:79},
+                {name:"Andre", pos:"MID", rating:77}, {name:"Sarabia", pos:"MID", rating:78}, {name:"Cunha", pos:"FWD", rating:82},
+                {name:"Hwang", pos:"FWD", rating:78}, {name:"Larsen", pos:"FWD", rating:79}, {name:"Bellegarde", pos:"FWD", rating:77},
+                {name:"Kalajdzic", pos:"FWD", rating:75}
+            ],
+            "Burnley": [
+                {name:"Trafford", pos:"GK", rating:76}, {name:"Hladky", pos:"GK", rating:72},
+                {name:"Roberts", pos:"DEF", rating:75}, {name:"Esteve", pos:"DEF", rating:76}, {name:"O'Shea", pos:"DEF", rating:75},
+                {name:"Ekdal", pos:"DEF", rating:74}, {name:"Pires", pos:"DEF", rating:75}, {name:"Humphreys", pos:"DEF", rating:73},
+                {name:"Brownhill", pos:"MID", rating:76}, {name:"Cullen", pos:"MID", rating:74}, {name:"Berge", pos:"MID", rating:77},
+                {name:"Foster", pos:"MID", rating:75}, {name:"Laurent", pos:"MID", rating:74}, {name:"Rodriguez", pos:"FWD", rating:75},
+                {name:"Amdouni", pos:"FWD", rating:76}, {name:"Fofana", pos:"FWD", rating:75}, {name:"Tresor", pos:"FWD", rating:74},
+                {name:"Koleosho", pos:"FWD", rating:74}
+            ],
+            "Leeds United": [
+                {name:"Meslier", pos:"GK", rating:77}, {name:"Darlow", pos:"GK", rating:73},
+                {name:"Byram", pos:"DEF", rating:75}, {name:"Rodon", pos:"DEF", rating:77}, {name:"Struijk", pos:"DEF", rating:76},
+                {name:"Firpo", pos:"DEF", rating:76}, {name:"Ampadu", pos:"DEF", rating:77}, {name:"Wober", pos:"DEF", rating:75},
+                {name:"Gray", pos:"MID", rating:76}, {name:"Kamara", pos:"MID", rating:76}, {name:"Gruev", pos:"MID", rating:75},
+                {name:"Rothwell", pos:"MID", rating:74}, {name:"Aaronson", pos:"MID", rating:77}, {name:"Piroe", pos:"FWD", rating:77},
+                {name:"Rutter", pos:"FWD", rating:77}, {name:"Gnonto", pos:"FWD", rating:77}, {name:"Bamford", pos:"FWD", rating:75},
+                {name:"James", pos:"FWD", rating:76}
+            ],
+            "Sunderland": [
+                {name:"Patterson", pos:"GK", rating:75}, {name:"Moore", pos:"GK", rating:71},
+                {name:"Hume", pos:"DEF", rating:74}, {name:"Ballard", pos:"DEF", rating:75}, {name:"O'Nien", pos:"DEF", rating:74},
+                {name:"Cirkin", pos:"DEF", rating:74}, {name:"Seelt", pos:"DEF", rating:73}, {name:"Hjelde", pos:"DEF", rating:72},
+                {name:"Neil", pos:"MID", rating:75}, {name:"Bellingham", pos:"MID", rating:77}, {name:"Ekwah", pos:"MID", rating:74},
+                {name:"Rigg", pos
