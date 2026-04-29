@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prem Manager 26</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); color: #fff; min-height: 100vh; }
+        .screen { display: none; padding: 20px; max-width: 1100px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #menu { text-align: center; padding-top: 100px; }
+        h1 { font-size: 3rem; background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px; font-weight: 800; }
+        .btn { background: linear-gradient(135deg, #00d4ff, #00a8cc); color: #0f0c29; border: none; padding: 14px 32px; font-size: 1.05rem; font-weight: 700; border-radius: 12px; cursor: pointer; margin: 6px; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5); }
+        .btn:active { transform: translateY(0); }
+        .btn-small { padding: 10px 18px; font-size: 0.9rem; }
+        .btn-red { background: linear-gradient(135deg, #ff4757, #e84118); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3); }
+        .btn-red:hover { box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5); }
+        .teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+        .team-btn { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 16px; border-radius: 14px; cursor: pointer; text-align: center; transition: all 0.2s ease; font-weight: 600; }
+        .team-btn:hover { background: rgba(0, 212, 255, 0.15); border-color: rgba(0, 212, 255, 0.4); transform: translateY(-3px); }
+        .dash-header { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 20px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 16px; border-radius: 14px; text-align: center; }
+        .stat-box h3 { font-size: 0.85rem; color: #aaa; margin-bottom: 8px; }
+        .stat-box p { font-size: 2rem; font-weight: 700; color: #00d4ff; }
+        .nav-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .squad-container { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+        .player-list,.pitch-container { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 18px; border-radius: 16px; max-height: 70vh; overflow-y: auto; }
+        .player { background: rgba(255, 255, 255, 0.05); margin: 6px 0; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease; border: 2px solid transparent; }
+        .player:hover { background: rgba(255, 255, 255, 0.1); transform: translateX(4px); }
+        .player.selected { border-color: #00d4ff; background: rgba(0, 212, 255, 0.15); }
+        .pos-tag { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; margin-left: 6px; }
+        .pos-GK { background: #f39c12; }.pos-DEF { background: #27ae60; }
+        .pos-MID { background: #3498db; }.pos-FWD { background: #e74c3c; }
+        .pitch { background: linear-gradient(180deg, #1e5631 0%, #2d7a46 100%); border: 3px solid rgba(255,255,255,0.3); border-radius: 12px; height: 420px; position: relative; margin-bottom: 12px; box-shadow: inset 0 0 30px rgba(0,0,0,0.3); }
+        .center-circle { width: 90px; height: 90px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .pitch-player { position: absolute; background: linear-gradient(135deg, #00d4ff, #00a8cc); color: #0f0c29; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; transform: translate(-50%,-50%); text-align: center; min-width: 65px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: all 0.2s ease; }
+        .pitch-player:hover { transform: translate(-50%,-50%) scale(1.1); }
+        .subs-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+        .sub-player { background: rgba(255, 255, 255, 0.08); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s ease; }
+        .sub-player:hover { background: rgba(255, 255, 255, 0.15); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 999; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .modal input { width: 100%; padding: 14px; margin: 18px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; font-size: 1rem; text-align: center; transition: all 0.2s ease; }
+        .modal input:focus { outline: none; border-color: #00d4ff; background: rgba(255,255,255,0.08); }
+        select { background: rgba(255, 255, 255, 0.08); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 10px; margin-bottom: 12px; font-weight: 600; }
+        .match-header { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 25px; border-radius: 16px; margin-bottom: 20px; text-align: center; }
+        .score-box { font-size: 3.5rem; font-weight: 800; margin: 15px 0; }
+        .match-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-row { background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; }
+        .events { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 18px; border-radius: 16px; max-height: 300px; overflow-y: auto; }
+        .event { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
+        .event.goal { color: #00ff88; font-weight: 600; }
+        @media (max-width: 850px) {
+            .squad-container { grid-template-columns: 1fr; }
+            .pitch { height: 360px; }
+            h1 { font-size: 2.2rem; }
+            .match-stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTeamName">Welcome Manager!</h2>
+            <p style="color:#aaa; margin-top:8px;">Enter your name:</p>
+            <input type="text" id="managerNameInput" placeholder="Your Name" maxlength="20">
+            <button class="btn" onclick="confirmName()">Confirm</button>
+        </div>
+    </div>
+
+    <div id="menu" class="screen active">
+        <h1>PREM MANAGER 26</h1>
+        <p style="color:#aaa; margin-bottom:35px; font-size:1.1rem;">2025-26 Season | April 2026 Squads</p>
+        <button class="btn" onclick="showScreen('teamSelect')">START GAME</button>
+    </div>
+
+    <div id="teamSelect" class="screen">
+        <h2 style="margin-bottom:10px;">Select Your Team</h2>
+        <div class="teams-grid" id="teamsGrid"></div>
+        <button class="btn btn-red btn-small" onclick="showScreen('menu')" style="margin-top:20px;">Back</button>
+    </div>
+
+    <div id="dashboard" class="screen">
+        <div class="dash-header">
+            <div>
+                <h2 id="managerTeam" style="font-size:1.8rem; margin-bottom:4px;">Team</h2>
+                <p style="color:#aaa;">Manager: <span id="managerNameText" style="color:#00d4ff; font-weight:600;">You</span></p>
+            </div>
+            <div style="text-align:right;">
+                <p style="color:#aaa;">Week: <span id="weekText" style="color:#fff; font-weight:600;">1</span></p>
+                <p id="formationText" style="color:#aaa;">Formation: <span style="color:#fff; font-weight:600;">4-3-3</span></p>
+            </div>
+        <div class="stats">
+            <div class="stat-box"><h3>Points</h3><p id="pointsText">0</p></div>
+            <div class="stat-box"><h3>Position</h3><p id="positionText">-</p></div>
+            <div class="stat-box"><h3>Budget</h3><p id="budgetText">£50m</p></div>
+        </div>
+        <div class="nav-btns">
+            <button class="btn" onclick="showScreen('squad')">Squad / Lineup</button>
+            <button class="btn" onclick="playMatch()">Play Match</button>
+            <button class="btn btn-red btn-small" onclick="showScreen('teamSelect')">Change Team</button>
+        </div>
+    </div>
+
+    <div id="squad" class="screen">
+        <h2 style="margin-bottom:12px;">Squad Management</h2>
+        <select id="formationSelect" onchange="updateFormation()">
+            <option value="4-3-3">4-3-3</option>
+            <option value="4-4-2">4-4-2</option>
+            <option value="3-5-2">3-5-2</option>
+            <option value="4-2-3-1">4-2-3-1</option>
+        </select>
+        <div class="squad-container">
+            <div class="player-list">
+                <h3 style="margin-bottom:12px;">Full Squad</h3>
+                <div id="fullSquad"></div>
+            </div>
+            <div class="pitch-container">
+                <h3 style="margin-bottom:12px;">Starting XI <span id="xiCount" style="color:#00d4ff;">(0/11)</span></h3>
+                <div class="pitch" id="pitch">
+                    <div class="center-circle"></div>
+                </div>
+                <h4 style="margin-top:12px; margin-bottom:8px;">Subs Bench</h4>
+                <div class="subs-row" id="subsBench"></div>
+            </div>
+        <button class="btn btn-small" onclick="showScreen('dashboard')" style="margin-top:18px;">Back to Dashboard</button>
+    </div>
+
+    <div id="match" class="screen">
+        <div class="match-header">
+            <h2 id="matchTeams" style="font-size:1.6rem;">Match</h2>
+            <div class="score-box" id="matchScore">0 - 0</div>
+            <p id="matchStatus" style="color:#aaa;">Full Time</p>
+        </div>
+        <div class="match-stats">
+            <div class="stat-row"><span>Possession</span><span id="possession">50% - 50%</span></div>
+            <div class="stat-row"><span>Shots</span><span id="shots">0 - 0</span></div>
+            <div class="stat-row"><span>Shots on Target</span><span id="shotsTarget">0 - 0</span></div>
+            <div class="stat-row"><span>Corners</span><span id="corners">0 - 0</span></div>
+        </div>
+        <h3 style="margin-bottom:12px;">Match Events</h3>
+        <div class="events" id="matchEvents"></div>
+        <button class="btn" onclick="showScreen('dashboard')" style="margin-top:18px;">Continue</button>
+    </div>
+
+    <script>
+        const teams = ["Arsenal","Aston Villa","Bournemouth","Brentford","Brighton","Burnley","Chelsea","Crystal Palace","Everton","Fulham","Leeds United","Liverpool","Manchester City","Manchester United","Newcastle United","Nottingham Forest","Sunderland","Tottenham Hotspur","West Ham United","Wolves"];
+
+        const squads = {
+            "Manchester United": [
+                {name:"Lammens", pos:"GK", rating:80}, {name:"Bayindir", pos:"GK", rating:75}, {name:"Heaton", pos:"GK", rating:70},
+                {name:"Dalot", pos:"DEF", rating:80}, {name:"Yoro", pos:"DEF", rating:79}, {name:"De Ligt", pos:"DEF", rating:83},
+                {name:"Martinez", pos:"DEF", rating:83}, {name:"Shaw", pos:"DEF", rating:81}, {name:"Mazraoui", pos:"DEF", rating:79},
+                {name:"Maguire", pos:"DEF", rating:78}, {name:"Brantwaite", pos:"DEF", rating:81}, {name:"Malacia", pos:"DEF", rating:75},
+                {name:"Ugarte", pos:"MID", rating:82}, {name:"Fernandes", pos:"MID", rating:87}, {name:"Mainoo", pos:"MID", rating:81},
+                {name:"Mount", pos:"MID", rating:80}, {name:"Casemiro", pos:"MID", rating:81}, {name:"Kone", pos:"MID", rating:76},
+                {name:"Collyer", pos:"MID", rating:74}, {name:"Zirkzee", pos:"FWD", rating:79}, {name:"Rashford", pos:"FWD", rating:83},
+                {name:"Amad", pos:"FWD", rating:80}, {name:"Antony", pos:"FWD", rating:78}, {name:"Sesko", pos:"FWD", rating:82},
+                {name:"Mbeumo", pos:"FWD", rating:82}
+            ],
+            "Arsenal": [
+                {name:"Raya", pos:"GK", rating:84}, {name:"Neto", pos:"GK", rating:77},
+                {name:"White", pos:"DEF", rating:83}, {name:"Saliba", pos:"DEF", rating:87}, {name:"Gabriel", pos:"DEF", rating:84},
+                {name:"Timber", pos:"DEF", rating:82}, {name:"Calafiori", pos:"DEF", rating:81}, {name:"Kiwior", pos:"DEF", rating:78},
+                {name:"Tomiyasu", pos:"DEF", rating:79}, {name:"Lewis-Skelly", pos:"DEF", rating:74}, {name:"Rice", pos:"MID", rating:87},
+                {name:"Odegaard", pos:"MID", rating:88}, {name:"Merino", pos:"MID", rating:82}, {name:"Partey", pos:"MID", rating:81},
+                {name:"Jorginho", pos:"MID", rating:80}, {name:"Nwaneri", pos:"MID", rating:75}, {name:"Saka", pos:"FWD", rating:89},
+                {name:"Havertz", pos:"FWD", rating:83}, {name:"Martinelli", pos:"FWD", rating:83}, {name:"Jesus", pos:"FWD", rating:82},
+                {name:"Trossard", pos:"FWD", rating:82}, {name:"Sterling", pos:"FWD", rating:80}
+            ],
+            "Manchester City": [
+                {name:"Ederson", pos:"GK", rating:86}, {name:"Ortega", pos:"GK", rating:79},
+                {name:"Walker", pos:"DEF", rating:81}, {name:"Dias", pos:"DEF", rating:88}, {name:"Stones", pos:"DEF", rating:83},
+                {name:"Ake", pos:"DEF", rating:82}, {name:"Gvardiol", pos:"DEF", rating:85}, {name:"Akanji", pos:"DEF", rating:82},
+                {name:"Lewis", pos:"DEF", rating:76}, {name:"Rodri", pos:"MID", rating:91}, {name:"De Bruyne", pos:"MID", rating:87},
+                {name:"Silva", pos:"MID", rating:86}, {name:"Foden", pos:"MID", rating:87}, {name:"Kovacic", pos:"MID", rating:82},
+                {name:"Nunes", pos:"MID", rating:79}, {name:"Haaland", pos:"FWD", rating:91}, {name:"Alvarez", pos:"FWD", rating:84},
+                {name:"Doku", pos:"FWD", rating:82}, {name:"Grealish", pos:"FWD", rating:81}, {name:"Savinho", pos:"FWD", rating:80}
+            ],
+            "Liverpool": [
+                {name:"Alisson", pos:"GK", rating:89}, {name:"Mamardashvili", pos:"GK", rating:82}, {name:"Kelleher", pos:"GK", rating:78},
+                {name:"Alexander-Arnold", pos:"DEF", rating:86}, {name:"Van Dijk", pos:"DEF", rating:86}, {name:"Konate", pos:"DEF", rating:83},
+                {name:"Robertson", pos:"DEF", rating:83}, {name:"Gomez", pos:"DEF", rating:79}, {name:"Bradley", pos:"DEF", rating:77},
+                {name:"Quansah", pos:"DEF", rating:76}, {name:"Mac Allister", pos:"MID", rating:86}, {name:"Szoboszlai", pos:"MID", rating:84},
+                {name:"Gravenberch", pos:"MID", rating:82}, {name:"Jones", pos:"MID", rating:80}, {name:"Endo", pos:"MID", rating:78},
+                {name:"Elliott", pos:"MID", rating:79}, {name:"Salah", pos:"FWD", rating:89}, {name:"Nunez", pos:"FWD", rating:82},
+                {name:"Diaz", pos:"FWD", rating:84}, {name:"Jota", pos:"FWD", rating:83}, {name:"Gakpo", pos:"FWD", rating:82}
+            ],
+            "Chelsea": [
+                {name:"Sanchez", pos:"GK", rating:79}, {name:"Jorgensen", pos:"GK", rating:76},
+                {name:"James", pos:"DEF", rating:83}, {name:"Fofana", pos:"DEF", rating:81}, {name:"Colwill", pos:"DEF", rating:81},
+                {name:"Disasi", pos:"DEF", rating:79}, {name:"Cucurella", pos:"DEF", rating:80}, {name:"Gusto", pos:"DEF", rating:79},
+                {name:"Badiashile", pos:"DEF", rating:78}, {name:"Caicedo", pos:"MID", rating:84}, {name:"Fernandez", pos:"MID", rating:84},
+                {name:"Palmer", pos:"MID", rating:87}, {name:"Lavia", pos:"MID", rating:80}, {name:"Dewsbury-Hall", pos:"MID", rating:78},
+                {name:"Garnacho", pos:"FWD", rating:82}, {name:"Jackson", pos:"FWD", rating:81}, {name:"Nkunku", pos:"FWD", rating:83},
+                {name:"Madueke", pos:"FWD", rating:80}, {name:"Mudryk", pos:"FWD", rating:78}, {name:"Neto", pos:"FWD", rating:82}
+            ],
+            "Tottenham Hotspur": [
+                {name:"Vicario", pos:"GK", rating:82}, {name:"Austin", pos:"GK", rating:72},
+                {name:"Porro", pos:"DEF", rating:82}, {name:"Romero", pos:"DEF", rating:85}, {name:"Van de Ven", pos:"DEF", rating:84},
+                {name:"Udogie", pos:"DEF", rating:81}, {name:"Dragusin", pos:"DEF", rating:79}, {name:"Davies", pos:"DEF", rating:77},
+                {name:"Spence", pos:"DEF", rating:76}, {name:"Bissouma", pos:"MID", rating:81}, {name:"Maddison", pos:"MID", rating:84},
+                {name:"Bentancur", pos:"MID", rating:82}, {name:"Sarr", pos:"MID", rating:79}, {name:"Kulusevski", pos:"MID", rating:83},
+                {name:"Bergvall", pos:"MID", rating:75}, {name:"Son", pos:"FWD", rating:86}, {name:"Solanke", pos:"FWD", rating:81},
+                {name:"Johnson", pos:"FWD", rating:80}, {name:"Richarlison", pos:"FWD", rating:80}, {name:"Tel", pos:"FWD", rating:76}
+            ],
+            "Newcastle United": [
+                {name:"Pope", pos:"GK", rating:81}, {name:"Dubravka", pos:"GK", rating:76},
+                {name:"Trippier", pos:"DEF", rating:82}, {name:"Schar", pos:"DEF", rating:81}, {name:"Botman", pos:"DEF", rating:82},
+                {name:"Burn", pos:"DEF", rating:78}, {name:"Livramento", pos:"DEF", rating:79}, {name:"Hall", pos:"DEF", rating:77},
+                {name:"Kelly", pos:"DEF", rating:76}, {name:"Guimaraes", pos:"MID", rating:85}, {name:"Tonali", pos:"MID", rating:83},
+                {name:"Joelinton", pos:"MID", rating:82}, {name:"Willock", pos:"MID", rating:78}, {name:"Longstaff", pos:"MID", rating:77},
+                {name:"Isak", pos:"FWD", rating:86}, {name:"Gordon", pos:"FWD", rating:82}, {name:"Barnes", pos:"FWD", rating:80},
+                {name:"Murphy", pos:"FWD", rating:76}, {name:"Wilson", pos:"FWD", rating:79}
+            ],
+            "Aston Villa": [
+                {name:"Martinez", pos:"GK", rating:85}, {name:"Olsen", pos:"GK", rating:74},
+                {name:"Cash", pos:"DEF", rating:79}, {name:"Konsa", pos:"DEF", rating:82}, {name:"Torres", pos:"DEF", rating:82},
+                {name:"Digne", pos:"DEF", rating:79}, {name:"Carlos", pos:"DEF", rating:78}, {name:"Moreno", pos:"DEF", rating:76},
+                {name:"Mings", pos:"DEF", rating:78}, {name:"Onana", pos:"MID", rating:81}, {name:"Kamara", pos:"MID", rating:80},
+                {name:"Tielemans", pos:"MID", rating:81}, {name:"McGinn", pos:"MID", rating:80}, {name:"Ramsey", pos:"MID", rating:78},
+                {name:"Watkins", pos:"FWD", rating:84}, {name:"Duran", pos:"FWD", rating:79}, {name:"Bailey", pos:"FWD", rating:81},
+                {name:"Diaby", pos:"FWD", rating:82}, {name:"Rogers", pos:"FWD", rating:77}
+            ],
+            "West Ham United": [
+                {name:"Areola", pos:"GK", rating:79}, {name:"Fabianski", pos:"GK", rating:75},
+                {name:"Coufal", pos:"DEF", rating:77}, {name:"Mavropanos", pos:"DEF", rating:78}, {name:"Kilman", pos:"DEF", rating:79},
+                {name:"Todibo", pos:"DEF", rating:80}, {name:"Emerson", pos:"DEF", rating:78}, {name:"Cresswell", pos:"DEF", rating:74},
+                {name:"Wan-Bissaka", pos:"DEF", rating:79}, {name:"Paqueta", pos:"MID", rating:83}, {name:"Soucek", pos:"MID", rating:79},
+                {name:"Alvarez", pos:"MID", rating:80}, {name:"Ward-Prowse", pos:"MID", rating:79}, {name:"Rodriguez", pos:"MID", rating:77},
+                {name:"Bowen", pos:"FWD", rating:84}, {name:"Kudus", pos:"FWD", rating:82}, {name:"Fullkrug", pos:"FWD", rating:80},
+                {name:"Antonio", pos:"FWD", rating:76}, {name:"Summerville", pos:"FWD", rating:78}
+            ],
+            "Brighton": [
+                {name:"Verbruggen", pos:"GK", rating:79}, {name:"Steele", pos:"GK", rating:74},
+                {name:"Veltman", pos:"DEF", rating:78}, {name:"Dunk", pos:"DEF", rating:80}, {name:"Van Hecke", pos:"DEF", rating:79},
+                {name:"Estupinan", pos:"DEF", rating:80}, {name:"Webster", pos:"DEF", rating:76}, {name:"Lamptey", pos:"DEF", rating:77},
+                {name:"Igor", pos:"DEF", rating:76}, {name:"Baleba", pos:"MID", rating:79}, {name:"Gilmour", pos:"MID", rating:78},
+                {name:"Gross", pos:"MID", rating:79}, {name:"Milner", pos:"MID", rating:76}, {name:"Wieffer", pos:"MID", rating:77},
+                {name:"Mitoma", pos:"FWD", rating:83}, {name:"Pedro", pos:"FWD", rating:82}, {name:"Welbeck", pos:"FWD", rating:78},
+                {name:"Enciso", pos:"FWD", rating:77}, {name:"Adingra", pos:"FWD", rating:78}, {name:"Ferguson", pos:"FWD", rating:79}
+            ],
+            "Brentford": [
+                {name:"Flekken", pos:"GK", rating:78}, {name:"Valdimarsson", pos:"GK", rating:73},
+                {name:"Ajer", pos:"DEF", rating:78}, {name:"Collins", pos:"DEF", rating:79}, {name:"Pinnock", pos:"DEF", rating:77},
+                {name:"Hickey", pos:"DEF", rating:77}, {name:"Henry", pos:"DEF", rating:76}, {name:"Roerslev", pos:"DEF", rating:75},
+                {name:"Norgaard", pos:"MID", rating:79}, {name:"Janelt", pos:"MID", rating:77}, {name:"Damsgaard", pos:"MID", rating:78},
+                {name:"Jensen", pos:"MID", rating:78}, {name:"Yarmolyuk", pos:"MID", rating:75}, {name:"Wissa", pos:"FWD", rating:80},
+                {name:"Schade", pos:"FWD", rating:77}, {name:"Toney", pos:"FWD", rating:81}, {name:"Lewis-Potter", pos:"FWD", rating:76}
+            ],
+            "Fulham": [
+                {name:"Leno", pos:"GK", rating:80}, {name:"Benda", pos:"GK", rating:72},
+                {name:"Castagne", pos:"DEF", rating:78}, {name:"Diop", pos:"DEF", rating:77}, {name:"Andersen", pos:"DEF", rating:79},
+                {name:"Bassey", pos:"DEF", rating:78}, {name:"Robinson", pos:"DEF", rating:79}, {name:"Tete", pos:"DEF", rating:76},
+                {name:"Lukic", pos:"MID", rating:78}, {name:"Pereira", pos:"MID", rating:80}, {name:"Smith Rowe", pos:"MID", rating:79},
+                {name:"Reed", pos:"MID", rating:76}, {name:"Berge", pos:"MID", rating:78}, {name:"Jimenez", pos:"FWD", rating:78},
+                {name:"Iwobi", pos:"FWD", rating:79}, {name:"Traore", pos:"FWD", rating:77}, {name:"Wilson", pos:"FWD", rating:77},
+                {name:"Muniz", pos:"FWD", rating:76}
+            ],
+            "Bournemouth": [
+                {name:"Travers", pos:"GK", rating:76}, {name:"Kepa", pos:"GK", rating:78},
+                {name:"Smith", pos:"DEF", rating:76}, {name:"Zabarnyi", pos:"DEF", rating:79}, {name:"Senesi", pos:"DEF", rating:78},
+                {name:"Kerkez", pos:"DEF", rating:79}, {name:"Huijsen", pos:"DEF", rating:77}, {name:"Araujo", pos:"DEF", rating:76},
+                {name:"Christie", pos:"MID", rating:77}, {name:"Cook                {name:"Scott", pos:"MID", rating:78},
+                {name:"Tavernier", pos:"MID", rating:78}, {name:"Kluivert", pos:"MID", rating:79}, {name:"Solanke", pos:"FWD", rating:81},
+                {name:"Semenyo", pos:"FWD", rating:79}, {name:"Ouattara", pos:"FWD", rating:77}, {name:"Sinisterra", pos:"FWD", rating:77},
+                {name:"Unal", pos:"FWD", rating:76}
+            ],
+            "Crystal Palace": [
+                {name:"Henderson", pos:"GK", rating:79}, {name:"Johnstone", pos:"GK", rating:76},
+                {name:"Munoz", pos:"DEF", rating:79}, {name:"Guehi", pos:"DEF", rating:82}, {name:"Andersen", pos:"DEF", rating:78},
+                {name:"Mitchell", pos:"DEF", rating:78}, {name:"Richards", pos:"DEF", rating:76}, {name:"Riad", pos:"DEF", rating:75},
+                {name:"Lacroix", pos:"DEF", rating:77}, {name:"Wharton", pos:"MID", rating:79}, {name:"Hughes", pos:"MID", rating:77},
+                {name:"Doucoure", pos:"MID", rating:78}, {name:"Eze", pos:"MID", rating:83}, {name:"Lerma", pos:"MID", rating:78},
+                {name:"Mateta", pos:"FWD", rating:81}, {name:"Nketiah", pos:"FWD", rating:78}, {name:"Sarr", pos:"FWD", rating:79},
+                {name:"Edouard", pos:"FWD", rating:76}, {name:"Ayew", pos:"FWD", rating:75}
+            ],
+            "Everton": [
+                {name:"Pickford", pos:"GK", rating:83}, {name:"Virginia", pos:"GK", rating:72},
+                {name:"Coleman", pos:"DEF", rating:76}, {name:"Tarkowski", pos:"DEF", rating:79}, {name:"Branthwaite", pos:"DEF", rating:80},
+                {name:"Mykolenko", pos:"DEF", rating:78}, {name:"Patterson", pos:"DEF", rating:75}, {name:"Keane", pos:"DEF", rating:75},
+                {name:"Young", pos:"DEF", rating:74}, {name:"Gueye", pos:"MID", rating:78}, {name:"Garner", pos:"MID", rating:77},
+                {name:"Doucoure", pos:"MID", rating:78}, {name:"Iroegbunam", pos:"MID", rating:74}, {name:"McNeil", pos:"MID", rating:78},
+                {name:"Calvert-Lewin", pos:"FWD", rating:79}, {name:"Beto", pos:"FWD", rating:77}, {name:"Harrison", pos:"FWD", rating:77},
+                {name:"Ndiaye", pos:"FWD", rating:78}, {name:"Broja", pos:"FWD", rating:76}
+            ],
+            "Nottingham Forest": [
+                {name:"Sels", pos:"GK", rating:78}, {name:"Turner", pos:"GK", rating:74},
+                {name:"Williams", pos:"DEF", rating:77}, {name:"Murillo", pos:"DEF", rating:80}, {name:"Milenkovic", pos:"DEF", rating:79},
+                {name:"Aina", pos:"DEF", rating:78}, {name:"Boly", pos:"DEF", rating:76}, {name:"Toffolo", pos:"DEF", rating:74},
+                {name:"Dominguez", pos:"MID", rating:79}, {name:"Sangare", pos:"MID", rating:79}, {name:"Anderson", pos:"MID", rating:78},
+                {name:"Gibbs-White", pos:"MID", rating:82}, {name:"Yates", pos:"MID", rating:76}, {name:"Wood", pos:"FWD", rating:79},
+                {name:"Elanga", pos:"FWD", rating:80}, {name:"Hudson-Odoi", pos:"FWD", rating:79}, {name:"Awoniyi", pos:"FWD", rating:78},
+                {name:"Jota", pos:"FWD", rating:77}
+            ],
+            "Wolves": [
+                {name:"Sa", pos:"GK", rating:78}, {name:"Bentley", pos:"GK", rating:72},
+                {name:"Semedo", pos:"DEF", rating:78}, {name:"Dawson", pos:"DEF", rating:76}, {name:"Kilman", pos:"DEF", rating:79},
+                {name:"Toti", pos:"DEF", rating:77}, {name:"Ait-Nouri", pos:"DEF", rating:79}, {name:"Bueno", pos:"DEF", rating:75},
+                {name:"Doyle", pos:"MID", rating:76}, {name:"Lemina", pos:"MID", rating:78}, {name:"Gomes", pos:"MID", rating:79},
+                {name:"Andre", pos:"MID", rating:77}, {name:"Sarabia", pos:"MID", rating:78}, {name:"Cunha", pos:"FWD", rating:82},
+                {name:"Hwang", pos:"FWD", rating:78}, {name:"Larsen", pos:"FWD", rating:79}, {name:"Bellegarde", pos:"FWD", rating:77},
+                {name:"Kalajdzic", pos:"FWD", rating:75}
+            ],
+            "Burnley": [
+                {name:"Trafford", pos:"GK", rating:76}, {name:"Hladky", pos:"GK", rating:72},
+                {name:"Roberts", pos:"DEF", rating:75}, {name:"Esteve", pos:"DEF", rating:76}, {name:"O'Shea", pos:"DEF", rating:75},
+                {name:"Ekdal", pos:"DEF", rating:74}, {name:"Pires", pos:"DEF", rating:75}, {name:"Humphreys", pos:"DEF", rating:73},
+                {name:"Brownhill", pos:"MID", rating:76}, {name:"Cullen", pos:"MID", rating:74}, {name:"Berge", pos:"MID", rating:77},
+                {name:"Foster", pos:"MID", rating:75}, {name:"Laurent", pos:"MID", rating:74}, {name:"Rodriguez", pos:"FWD", rating:75},
+                {name:"Amdouni", pos:"FWD", rating:76}, {name:"Fofana", pos:"FWD", rating:75}, {name:"Tresor", pos:"FWD", rating:74},
+                {name:"Koleosho", pos:"FWD", rating:74}
+            ],
+            "Leeds United": [
+                {name:"Meslier", pos:"GK", rating:77}, {name:"Darlow", pos:"GK", rating:73},
+                {name:"Byram", pos:"DEF", rating:75}, {name:"Rodon", pos:"DEF", rating:77}, {name:"Struijk", pos:"DEF", rating:76},
+                {name:"Firpo", pos:"DEF", rating:76}, {name:"Ampadu", pos:"DEF", rating:77}, {name:"Wober", pos:"DEF", rating:75},
+                {name:"Gray", pos:"MID", rating:76}, {name:"Kamara", pos:"MID", rating:76}, {name:"Gruev", pos:"MID", rating:75},
+                {name:"Rothwell", pos:"MID", rating:74}, {name:"Aaronson", pos:"MID", rating:77}, {name:"Piroe", pos:"FWD", rating:77},
+                {name:"Rutter", pos:"FWD", rating:77}, {name:"Gnonto", pos:"FWD", rating:77}, {name:"Bamford", pos:"FWD", rating:75},
+                {name:"James", pos:"FWD", rating:76}
+            ],
+            "Sunderland": [
+                {name:"Patterson", pos:"GK", rating:75}, {name:"Moore", pos:"GK", rating:71},
+                {name:"Hume", pos:"DEF", rating:74}, {name:"Ballard", pos:"DEF", rating:75}, {name:"O'Nien", pos:"DEF", rating:74},
+                {name:"Cirkin", pos:"DEF", rating:74}, {name:"Seelt", pos:"DEF", rating:73}, {name:"Hjelde", pos:"DEF", rating:72},
+                {name:"Neil", pos:"MID", rating:75}, {name:"Bellingham", pos:"MID", rating:77}, {name:"Ekwah", pos:"MID", rating:74},
+                {name:"Rigg", pos:"MID", rating:74}, {name:"Jobe", pos:"MID", rating:75}, {name:"Clarke", pos:"FWD", rating:77},
+                {name:"Mundle", pos:"FWD", rating:73}, {name:"Rusyn", pos:"FWD", rating:72}, {name:"Ba", pos:"FWD", rating:72},
+                {name:"Aouchiche", pos:"FWD", rating:73}
+            ]
+        };
+
+        let currentTeam = null;
+        let managerName = "You";
+        let selectedPlayers = [];
+        let currentFormation = "4-3-3";
+        let leagueTable = {};
+        let fixtures = [];
+        let currentWeek = 1;
+        let matchEvents = [];
+
+        const formations = {
+            "4-3-3": {DEF: 4, MID: 3, FWD: 3},
+            "4-4-2": {DEF: 4, MID: 4, FWD: 2},
+            "3-5-2": {DEF: 3, MID: 5, FWD: 2},
+            "4-2-3-1": {DEF: 4, MID: 5, FWD: 1}
+        };
+
+        const pitchPositions = {
+            "4-3-3": [
+                {x: 50, y: 90, pos: "GK"}, {x: 20, y: 70, pos: "DEF"}, {x: 40, y: 70, pos: "DEF"}, {x: 60, y: 70, pos: "DEF"}, {x: 80, y: 70, pos: "DEF"},
+                {x: 30, y: 45, pos: "MID"}, {x: 50, y: 45, pos: "MID"}, {x: 70, y: 45, pos: "MID"},
+                {x: 25, y: 20, pos: "FWD"}, {x: 50, y: 20, pos: "FWD"}, {x: 75, y: 20, pos: "FWD"}
+            ],
+            "4-4-2": [
+                {x: 50, y: 90, pos: "GK"}, {x: 20, y: 70, pos: "DEF"}, {x: 40, y: 70, pos: "DEF"}, {x: 60, y: 70, pos: "DEF"}, {x: 80, y: 70, pos: "DEF"},
+                {x: 20, y: 45, pos: "MID"}, {x: 40, y: 45, pos: "MID"}, {x: 60, y: 45, pos: "MID"}, {x: 80, y: 45, pos: "MID"},
+                {x: 35, y: 20, pos: "FWD"}, {x: 65, y: 20, pos: "FWD"}
+            ],
+            "3-5-2": [
+                {x: 50, y: 90, pos: "GK"}, {x: 30, y: 70, pos: "DEF"}, {x: 50, y: 70, pos: "DEF"}, {x: 70, y: 70, pos: "DEF"},
+                {x: 15, y: 45, pos: "MID"}, {x: 35, y: 45, pos: "MID"}, {x: 50, y: 45, pos: "MID"}, {x: 65, y: 45, pos: "MID"}, {x: 85, y: 45, pos: "MID"},
+                {x: 35, y: 20, pos: "FWD"}, {x: 65, y: 20, pos: "FWD"}
+            ],
+            "4-2-3-1": [
+                {x: 50, y: 90, pos: "GK"}, {x: 20, y: 70, pos: "DEF"}, {x: 40, y: 70, pos: "DEF"}, {x: 60, y: 70, pos: "DEF"}, {x: 80, y: 70, pos: "DEF"},
+                {x: 35, y: 55, pos: "MID"}, {x: 65, y: 55, pos: "MID"},
+                {x: 25, y: 35, pos: "MID"}, {x: 50, y: 35, pos: "MID"}, {x: 75, y: 35, pos: "MID"},
+                {x: 50, y: 20, pos: "FWD"}
+            ]
+        };
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (id === 'teamSelect') loadTeams();
+            if (id === 'squad') loadSquad();
+            if (id === 'dashboard') updateDashboard();
+        }
+
+        function loadTeams() {
+            const grid = document.getElementById('teamsGrid');
+            grid.innerHTML = '';
+            teams.forEach(team => {
+                const btn = document.createElement('div');
+                btn.className = 'team-btn';
+                btn.textContent = team;
+                btn.addEventListener('click', () => selectTeam(team));
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectTeam(team) {
+            currentTeam = team;
+            document.getElementById('modalTeamName').textContent = team;
+            document.getElementById('nameModal').classList.add('active');
+        }
+
+        function confirmName() {
+            const input = document.getElementById('managerNameInput');
+            managerName = input.value.trim() || "You";
+            document.getElementById('managerNameText').textContent = managerName;
+            document.getElementById('managerTeam').textContent = currentTeam;
+            document.getElementById('nameModal').classList.remove('active');
+            selectedPlayers = [];
+            initLeague();
+            input.value = '';
+            showScreen('dashboard');
+        }
+
+        function loadSquad() {
+            const squad = squads[currentTeam] || [];
+            const fullSquadDiv = document.getElementById('fullSquad');
+            fullSquadDiv.innerHTML = '';
+            squad.forEach((p, i) => {
+                const div = document.createElement('div');
+                div.className = 'player';
+                if (selectedPlayers.includes(i)) div.classList.add('selected');
+                div.innerHTML = `<span>${p.name} <span class="pos-tag pos-${p.pos}">${p.pos}</span></span><span>${p.rating}</span>`;
+                div.onclick = () => togglePlayer(i);
+                fullSquadDiv.appendChild(div);
+            });
+            updatePitch();
+            updateSubs();
+        }
+
+        function togglePlayer(index) {
+            const i = selectedPlayers.indexOf(index);
+            if (i > -1) {
+                selectedPlayers.splice(i, 1);
+            } else {
+                if (selectedPlayers.length < 11) selectedPlayers.push(index);
+            }
+            loadSquad();
+        }
+
+        function updateFormation() {
+            currentFormation = document.getElementById('formationSelect').value;
+            document.getElementById('formationText').innerHTML = `Formation: <span style="color:#fff; font-weight:600;">${currentFormation}</span>`;
+            updatePitch();
+        }
+
+        function updatePitch() {
+            const pitch = document.getElementById('pitch');
+            pitch.querySelectorAll('.pitch-player').forEach(p => p.remove());
+            const squad = squads[currentTeam] || [];
+            const positions = pitchPositions[currentFormation];
+
+            selectedPlayers.forEach((playerIndex, i) => {
+                if (i >= positions.length) return;
+                const player = squad[playerIndex];
+                const pos = positions[i];
+                const el = document.createElement('div');
+                el.className = 'pitch-player';
+                el.style.left = pos.x + '%';
+                el.style.top = pos.y + '%';
+                el.textContent = player.name.split(' ').pop();
+                el.onclick = () => removeFromPitch(playerIndex);
+                pitch.appendChild(el);
+            });
+            document.getElementById('xiCount').textContent = `(${selectedPlayers.length}/11)`;
+        }
+
+        function updateSubs() {
+            const subsDiv = document.getElementById('subsBench');
+            subsDiv.innerHTML = '';
+            const squad = squads[currentTeam] || [];
+            squad.forEach((p, i) => {
+                if (!selectedPlayers.includes(i)) {
+                    const div = document.createElement('div');
+                    div.className = 'sub-player';
+                    div.textContent = p.name.split(' ').pop();
+                    div.onclick = () => addToPitch(i);
+                    subsDiv.appendChild(div);
+                }
+            });
+        }
+
+        function addToPitch(index) {
+            if (selectedPlayers.length < 11 &&!selectedPlayers.includes(index)) {
+                selectedPlayers.push(index);
+                loadSquad();
+            }
+        }
+
+        function removeFromPitch(index) {
+            const i = selectedPlayers.indexOf(index);
+            if (i > -1) {
+                selectedPlayers.splice(i, 1);
+                loadSquad();
+            }
+        }
+
+        document.getElementById('nameModal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        function initLeague() {
+            teams.forEach(team => {
+                leagueTable = {P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0};
+            });
+            generateFixtures();
+        }
+
+        function generateFixtures() {
+            fixtures = [];
+            const n = teams.length;
+            for(let w = 0; w < n-1; w++) {
+                for(let i = 0; i < n/2; i++) {
+                    let home = (w + i) % (n-1);
+                    let away = (n-1-i + w) % (n-1);
+                    if(i === 0) away = n-1;
+                    if(w % 2 === 1) [home, away] = [away, home];
+                    fixtures.push({home: teams[home], away: teams, week: w+1, played: false});
+                    fixtures.push({home: teams, away: teams[home], week: w+20, played: false});
+                }
+            }
+        }
+
+        function getTeamRating(team, isUser) {
+            const squad = squads;
+            if(isUser && selectedPlayers.length === 11) {
+                return selectedPlayers.reduce((sum, i) => sum + squad[i].rating, 0) / 11;
+            }
+            return squad.slice().sort((a,b) => b.rating - a.rating).slice(0,11).reduce((sum, p) => sum + p.rating, 0) / 11;
+        }
+
+        function getScorer(team, isUser) {
+            const squad = squads;
+            let attackers;
+            if(isUser && selectedPlayers.length === 11) {
+                attackers = selectedPlayers.map(i => squad[i]).filter(p => p.pos === 'FWD' || p.pos === 'MID');
+            } else {
+                attackers = squad.filter(p => p.pos === 'FWD' || p.pos === 'MID').sort((a,b) => b.rating - a.rating).slice(0,6);
+            }
+            if(attackers.length === 0) attackers = squad.slice(0,1);
+            const weights = attackers.map(p => Math.pow(Math.max(1, p.rating - 70), 2));
+            const total = weights.reduce((a,b) => a+b, 0);
+            let r = Math.random() * total;
+            for(let i = 0; i < attackers.length; i++) {
+                r -= weights[i];
+                if(r <= 0) return attackers[i].name;
+            }
+            return attackers[0].name;
+        }
+
+        function playMatch() {
+            if(!currentTeam || selectedPlayers.length!== 11) {
+                alert('Pick a full Starting XI first!');
+                showScreen('squad');
+                return;
+            }
+            if(Object.keys(leagueTable).length === 0) initLeague();
+
+            const userFixture = fixtures.find(f => (f.home === currentTeam || f.away === currentTeam) && f.week === currentWeek &&!f.played);
+            if(!userFixture) {
+                alert('No match this week or season over!');
+                return;
+            }
+
+            const isHome = userFixture.home === currentTeam;
+            const opponent = isHome? userFixture.away : userFixture.home;
+
+            matchEvents = [];
+            const userRating = getTeamRating(currentTeam, true);
+            const oppRating = getTeamRating(opponent, false);
+
+            let userGoals = 0, oppGoals = 0;
+            let userShots = 0, oppShots = 0, userOnTarget = 0, oppOnTarget = 0;
+            let userPoss = 50, oppPoss = 50;
+
+            const advantage = (userRating - oppRating) * 2 + (isHome? 5 : -5);
+            userPoss = Math.max(35, Math.min(65, 50 + advantage/2));
+            oppPoss = 100 - userPoss;
+
+            for(let min = 1; min <= 90; min++) {
+                if(Math.random() * 100 < userPoss / 8) {
+                    userShots++;
+                    if(Math.random() * 100 < userRating - 55) {
+                        userOnTarget++;
+                        if(Math.random() * 100 < (userRating - 70) + advantage/3) {
+                            userGoals++;
+                            const scorer = getScorer(currentTeam, true);
+                            matchEvents.push({min, text: `⚽ GOAL! ${scorer} scores for ${currentTeam}`, type: 'goal'});
+                        }
+                    }
+                }
+                if(Math.random() * 100 < oppPoss / 8) {
+                    oppShots++;
+                    if(Math.random() * 100 < oppRating - 55) {
+                        oppOnTarget++;
+                        if(Math.random() * 100 < (oppRating - 70) - advantage/3) {
+                            oppGoals++;
+                            const scorer = getScorer(opponent, false);
+                            matchEvents.push({min, text: `⚽ GOAL! ${scorer} scores for ${opponent}`, type: 'goal'});
+                        }
+                    }
+                }
+            }
+
+            updateTable(userFixture.home, userFixture.away, isHome? userGoals : oppGoals, isHome? oppGoals : userGoals);
+            userFixture.played = true;
+
+            fixtures.filter(f => f.week === currentWeek &&!f.played).forEach(f => {
+                const hRat = getTeamRating(f.home, false);
+                const aRat = getTeamRating(f.away, false);
+                const adv = (hRat - aRat) * 2 + 5;
+                const hg = Math.max(0, Math.floor(Math.random() * 4 + adv/15));
+                const ag = Math.max(0, Math.floor(Math.random() * 4 - adv/15));
+                updateTable(f.home, f.away, hg, ag);
+                f.played = true;
+            });
+
+            currentWeek++;
+            showMatchResult(currentTeam, opponent, userGoals, oppGoals, isHome, userShots, oppShots, userOnTarget, oppOnTarget, userPoss, oppPoss);
+        }
+
+        function updateTable(home, away, hg, ag) {
+            leagueTable[home].P++; leagueTable.P++;
+            leagueTable[home].GF += hg; leagueTable[home].GA += ag;
+            leagueTable.GF += ag; leagueTable.GA += hg;
+            leagueTable[home].GD = leagueTable[home].GF - leagueTable[home].GA;
+            leagueTable.GD = leagueTable.GF - leagueTable.GA;
+
+            if(hg > ag) {
+                leagueTable[home].W++; leagueTable[home].Pts += 3;
+                leagueTable.L++;
+            } else if(hg < ag) {
+                leagueTable.W++; leagueTable.Pts += 3;
+                leagueTable[home].L++;
+            } else {
+                leagueTable[home].D++; leagueTable.D++;
+                leagueTable[home].Pts++; leagueTable.Pts++;
+            }
+        }
+
+        function showMatchResult(user, opp, ug, og, isHome, us, os, uot, oot, up, op) {
+            const homeTeam = isHome? user : opp;
+            const awayTeam = isHome? opp : user;
+            const homeGoals = isHome? ug : og;
+            const awayGoals = isHome? og : ug;
+            const homeShots = isHome? us : os;
+            const awayShots = isHome? os : us;
+            const homeOnTarget = isHome? uot : oot;
+            const awayOnTarget = isHome? oot : uot;
+            const homePoss = isHome? up : op;
+            const awayPoss = isHome? op : up;
+
+            document.getElementById('matchTeams').textContent = `${homeTeam} vs ${awayTeam}`;
+            document.getElementById('matchScore').textContent = `${homeGoals} - ${awayGoals}`;
+            document.getElementById('matchStatus').textContent = ug > og? 'YOU WIN!' : ug < og? 'DEFEAT' : 'DRAW';
+            document.getElementById('possession').textContent = `${homePoss.toFixed(0)}% - ${awayPoss.toFixed(0)}%`;
+            document.getElementById('shots').textContent = `${homeShots} - ${awayShots}`;
+            document.getElementById('shotsTarget').textContent = `${homeOnTarget} - ${awayOnTarget}`;
+            document.getElementById('corners').textContent = `${Math.floor(homeShots/3)} - ${Math.floor(awayShots/3)}`;
+
+            const eventsDiv = document.getElementById('matchEvents');
+            eventsDiv.innerHTML = '';
+            matchEvents.forEach(e => {
+                const div = document.createElement('div');
+                div.className = 'event ' + e.type;
+                div.textContent = `${e.min}' ${e.text}`;
+                eventsDiv.appendChild(div);
+            });
+            if(matchEvents.length === 0) eventsDiv.innerHTML = '<div class="event">No major events</div>';
+
+            showScreen('match');
+        }
+
+        function updateDashboard() {
+            if(!currentTeam ||!leagueTable[currentTeam]) return;
+            document.getElementById('weekText').textContent = currentWeek;
+            document.getElementById('pointsText').textContent = leagueTable[currentTeam].Pts;
+            document.getElementById('positionText').textContent = getPosition();
+            document.getElementById('budgetText').textContent = '£' + (50 + leagueTable[currentTeam].Pts * 2) + 'm';
+        }
+
+        function getPosition() {
+            const sorted = Object.entries(leagueTable).sort((a,b) => b[1].Pts - a[1].Pts || b[1].GD - a[1].GD);
+            return sorted.findIndex(() => team === currentTeam) + 1;
+        }
+    </script>
+</body>
+</html>
